@@ -1,0 +1,23 @@
+[
+  {
+    "name": "Master Services Agreement (MSA)",
+    "category": "Services",
+    "description": "A framework agreement establishing terms for ongoing service engagements. Includes standard terms for intellectual property, liability, and payment that apply to all subsequent work orders.",
+    "content": "MASTER SERVICES AGREEMENT\n\nThis Master Services Agreement (\"Agreement\") is effective {{effective_date}}\n\nBetween:\n{{client_name}} (\"Client\")\nAnd:\n{{vendor_name}} (\"Vendor\")\n\n1. SCOPE OF SERVICES\nVendor agrees to provide services as described in individual Statements of Work (\"SOW\") to be executed under this Agreement.\n\n2. PAYMENT TERMS\nTotal Contract Value: {{contract_value}}\nPayment Schedule: {{payment_schedule}}\nPayment Terms: Net {{payment_terms_days}} days\n\n3. INTELLECTUAL PROPERTY\nAll work product created under this Agreement shall be owned by {{ip_owner}}.\n\n4. LIABILITY\nMaximum Liability: {{liability_limit}}\nInsurance Required: {{insurance_requirements}}\n\n5. TERM AND TERMINATION\nInitial Term: {{term_months}} months\nRenewal: {{renewal_terms}}\nTermination Notice: {{termination_notice_days}} days\n\n6. GOVERNING LAW\n{{governing_state}}",
+    "default_variables": {
+      "effective_date": "2026-07-11",
+      "client_name": "[Client Name]",
+      "vendor_name": "[Vendor Name]",
+      "contract_value": "[Contract Value]",
+      "payment_schedule": "[Payment Schedule]",
+      "payment_terms_days": "30",
+      "ip_owner": "[IP Owner]",
+      "liability_limit": "[Liability Limit]",
+      "insurance_requirements": "[Insurance Requirements]",
+      "term_months": "12",
+      "renewal_terms": "Auto-renewal for 12 months",
+      "termination_notice_days": "30",
+      "governing_state": "[State/Country]"
+    }
+  }
+]

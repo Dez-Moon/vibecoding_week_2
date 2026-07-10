@@ -1,0 +1,20 @@
+[
+  {
+    "name": "Confidentiality Policy",
+    "category": "Policy",
+    "description": "An internal company policy establishing rules for handling sensitive data. Covers data classification, access controls, and employee obligations.",
+    "content": "CONFIDENTIALITY AND DATA PROTECTION POLICY\n\nEffective Date: {{effective_date}}\nCompany: {{company_name}}\nVersion: {{version}}\n\n1. PURPOSE\nThis policy establishes guidelines for the protection of confidential information and sensitive data within {{company_name}}.\n\n2. SCOPE\nThis policy applies to all employees, contractors, and third parties with access to company information systems.\n\n3. DATA CLASSIFICATION\n- Public: Information intended for public disclosure\n- Internal: Information for internal use only\n- Confidential: Sensitive business information\n- Restricted: Highly sensitive data requiring maximum protection\n\n4. EMPLOYEE OBLIGATIONS\nAll employees must:\n- Complete confidentiality training by {{training_deadline}}\n- Sign the Acknowledgment Form annually\n- Report security incidents within {{incident_report_hours}} hours\n\n5. DATA HANDLING REQUIREMENTS\n- Encryption Required: {{encryption_required}}\n- Access Level: {{access_level}}\n- Retention Period: {{retention_days}} days\n\n6. NON-COMPLIANCE\nViolations may result in disciplinary action up to and including termination.\n\nAPPROVED BY: {{approver_name}}\nCONTACT: {{contact_email}}",
+    "default_variables": {
+      "effective_date": "2026-07-11",
+      "company_name": "[Company Name]",
+      "version": "1.0",
+      "training_deadline": "30 days from hire",
+      "incident_report_hours": "24",
+      "encryption_required": "AES-256",
+      "access_level": "[Access Level]",
+      "retention_days": "365",
+      "approver_name": "[Approver Name]",
+      "contact_email": "[HR Contact Email]"
+    }
+  }
+]

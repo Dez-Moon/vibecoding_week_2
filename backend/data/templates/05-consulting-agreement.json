@@ -1,0 +1,24 @@
+[
+  {
+    "name": "Consulting Services Agreement",
+    "category": "Services",
+    "description": "A contractor agreement for independent consultants. Defines deliverables, payment rates, and intellectual property terms for short-term project engagements.",
+    "content": "CONSULTING SERVICES AGREEMENT\n\nThis Consulting Agreement (\"Agreement\") is entered into as of {{effective_date}}\n\nBetween:\n{{client_name}} (\"Client\")\nAnd:\n{{consultant_name}} (\"Consultant\")\n\n1. ENGAGEMENT\nConsultant agrees to provide consulting services as described in Exhibit A attached hereto.\n\n2. COMPENSATION\nRate: {{hourly_rate}} per hour\nMaximum Hours: {{max_hours}} hours per week\nPayment Terms: Net {{payment_terms_days}} days\n\n3. EXPENSES\nPre-approved expenses up to {{expense_limit}} per month will be reimbursed.\n\n4. DELIVERABLES\n{{deliverable_1}}\n{{deliverable_2}}\n{{deliverable_3}}\nDelivery Date: {{delivery_date}}\n\n5. INDEPENDENT CONTRACTOR STATUS\nConsultant is an independent contractor and not an employee of Client.\n\n6. NON-SOLICITATION\nConsultant agrees not to solicit Client employees for {{non_solicit_months}} months following termination.\n\n7. TERMINATION\nEither party may terminate with {{notice_days}} days written notice.\n\n8. GOVERNING LAW\n{{governing_state}}",
+    "default_variables": {
+      "effective_date": "2026-07-11",
+      "client_name": "[Client Name]",
+      "consultant_name": "[Consultant Name]",
+      "hourly_rate": "[Hourly Rate]",
+      "max_hours": "20",
+      "payment_terms_days": "30",
+      "expense_limit": "500",
+      "deliverable_1": "[Deliverable 1]",
+      "deliverable_2": "[Deliverable 2]",
+      "deliverable_3": "[Deliverable 3]",
+      "delivery_date": "[Delivery Date]",
+      "non_solicit_months": "6",
+      "notice_days": "14",
+      "governing_state": "[State/Country]"
+    }
+  }
+]
