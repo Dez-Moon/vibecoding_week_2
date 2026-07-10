@@ -1,2 +1,5 @@
 # vibecoding_week_2
-A platform for drafting common legal agreements
+
+> **Status:** In Progress — expected completion by **2026-07-17**
+
+A platform for drafting common legal agreements.
