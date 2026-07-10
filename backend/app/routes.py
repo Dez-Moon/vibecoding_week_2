@@ -13,14 +13,18 @@ def list_templates(skip: int = 0, limit: int = 100, db: Session = Depends(get_db
     return crud.get_templates(db, skip=skip, limit=limit)
 
 
-@router.post("/{template_id}/render")
-def render_template(template_id: int, variables: dict, db: Session = Depends(get_db)):
+@router.post("/{template_id}/render", response_model=schemas.RenderResponse)
+def render_template(template_id: int, body: schemas.RenderRequest, db: Session = Depends(get_db)):
     template = crud.get_template(db, template_id)
     if not template:
         raise HTTPException(status_code=404, detail="Template not found")
-    import re
+    import re, json
     content = template.content
-    for key, value in variables.items():
+    defaults = {}
+    if template.default_variables:
+        defaults = json.loads(template.default_variables) if isinstance(template.default_variables, str) else template.default_variables
+    merged = {**defaults, **body.variables}
+    for key, value in merged.items():
         content = re.sub(r"\{\{\s*" + re.escape(key) + r"\s*\}\}", str(value), content)
     return {"template_id": template_id, "rendered_content": content}
 

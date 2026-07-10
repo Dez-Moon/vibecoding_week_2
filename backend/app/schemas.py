@@ -34,3 +34,12 @@ class TemplateRead(TemplateBase):
         if isinstance(v, str):
             return json.loads(v)
         return v
+
+
+class RenderRequest(BaseModel):
+    variables: dict = {}
+
+
+class RenderResponse(BaseModel):
+    template_id: int
+    rendered_content: str

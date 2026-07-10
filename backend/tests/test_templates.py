@@ -160,9 +160,35 @@ def test_render_template(client):
 
     render_resp = client.post(
         f"/templates/{template_id}/render",
-        json={"party_a": "Alice Corp", "party_b": "Bob LLC"}
+        json={"variables": {"party_a": "Alice Corp", "party_b": "Bob LLC"}}
     )
     assert render_resp.status_code == 200
     data = render_resp.json()
     assert "Alice Corp" in data["rendered_content"]
     assert "Bob LLC" in data["rendered_content"]
+
+
+def test_render_template_applies_default_variables(client):
+    """Stored default_variables are applied when a variable is not overridden by the request body."""
+    payload = {
+        "name": "Default Vars NDA",
+        "category": "Contracts",
+        "description": "Test default_variables merge",
+        "content": "Party A: {{party_a}}. Party B: {{party_b}}. Effective: {{date}}.",
+        "default_variables": {"party_a": "DefaultA", "party_b": "DefaultB", "date": "2026-01-01"},
+    }
+    create_resp = client.post("/templates/", json=payload)
+    template_id = create_resp.json()["id"]
+
+    # Only override party_a; party_b and date should fall back to defaults
+    render_resp = client.post(
+        f"/templates/{template_id}/render",
+        json={"variables": {"party_a": "Alice Corp"}}
+    )
+    assert render_resp.status_code == 200
+    data = render_resp.json()
+    assert "Alice Corp" in data["rendered_content"]
+    assert "DefaultB" in data["rendered_content"]
+    assert "2026-01-01" in data["rendered_content"]
+    # Confirm party_b was NOT overridden by some stray value
+    assert "Bob" not in data["rendered_content"]
