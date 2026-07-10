@@ -13,6 +13,18 @@ def list_templates(skip: int = 0, limit: int = 100, db: Session = Depends(get_db
     return crud.get_templates(db, skip=skip, limit=limit)
 
 
+@router.post("/{template_id}/render")
+def render_template(template_id: int, variables: dict, db: Session = Depends(get_db)):
+    template = crud.get_template(db, template_id)
+    if not template:
+        raise HTTPException(status_code=404, detail="Template not found")
+    import re
+    content = template.content
+    for key, value in variables.items():
+        content = re.sub(r"\{\{\s*" + re.escape(key) + r"\s*\}\}", str(value), content)
+    return {"template_id": template_id, "rendered_content": content}
+
+
 @router.get("/{template_id}", response_model=schemas.TemplateRead)
 def get_template(template_id: int, db: Session = Depends(get_db)):
     template = crud.get_template(db, template_id)

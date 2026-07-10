@@ -145,3 +145,24 @@ def test_list_templates_after_create(client):
     response = client.get("/templates/")
     assert response.status_code == 200
     assert len(response.json()) >= 1
+
+
+def test_render_template(client):
+    payload = {
+        "name": "Render Test NDA",
+        "category": "Confidentiality",
+        "description": "Test render",
+        "content": "Party A: {{party_a}}. Party B: {{party_b}}.",
+        "default_variables": {"party_a": "DefaultA", "party_b": "DefaultB"},
+    }
+    create_resp = client.post("/templates/", json=payload)
+    template_id = create_resp.json()["id"]
+
+    render_resp = client.post(
+        f"/templates/{template_id}/render",
+        json={"party_a": "Alice Corp", "party_b": "Bob LLC"}
+    )
+    assert render_resp.status_code == 200
+    data = render_resp.json()
+    assert "Alice Corp" in data["rendered_content"]
+    assert "Bob LLC" in data["rendered_content"]
