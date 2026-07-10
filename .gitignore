@@ -89,6 +89,12 @@ htmlcov/
 credentials.json
 service-account.json
 
+# Claude Code
+.claude/
+!.claude/plugins/
+!.claude/plugins/*/
+.claude/plugins/*/.in_use/
+
 # Misc
 *.bak
 *.tmp
