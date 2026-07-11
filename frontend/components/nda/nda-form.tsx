@@ -23,6 +23,7 @@ export function NDAForm({ template, onFormChange }: NDAFormProps) {
     formState: { errors },
   } = useForm<NDAFormSchema>({
     resolver: zodResolver(ndaFormSchema),
+    mode: "onBlur",
     defaultValues: {
       party_a_name: template.default_variables.party_a_name ?? "",
       party_b_name: template.default_variables.party_b_name ?? "",
