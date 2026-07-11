@@ -42,14 +42,11 @@ export function NDAPDFDocument({ renderedContent }: NDAPDFDocumentProps) {
   return (
     <Document>
       <Page size="A4" style={styles.page}>
-        {paragraphs.map((para, i) => {
-          const isHeading = /^[A-Z][A-Z\s]+$/.test(para.trim())
-          return (
+        {paragraphs.map((para, i) => (
             <Text key={i} style={styles.body}>
               {para.trim()}
             </Text>
-          )
-        })}
+          ))}
       </Page>
     </Document>
   )
