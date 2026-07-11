@@ -59,15 +59,10 @@ export function NDAPreview({
         formValues?.party_a_name ??
         template.default_variables.party_a_name ??
         "nda"
-      const partyBName = formValues?.party_b_name ?? ""
       const filename = `NDA_${sanitizeFilename(partyAName)}.pdf`
 
       const blob = await pdf(
-        <NDAPDFDocument
-          renderedContent={renderedContent}
-          partyAName={partyAName}
-          partyBName={partyBName}
-        />
+        <NDAPDFDocument renderedContent={renderedContent} />
       ).toBlob()
 
       objectUrl = URL.createObjectURL(blob)

@@ -1,14 +1,19 @@
 "use client"
 
 import { useQuery } from "@tanstack/react-query"
-import { getTemplate } from "@/lib/api"
+import { listTemplates } from "@/lib/api"
 
-const NDA_TEMPLATE_ID = 1
+const NDA_TEMPLATE_NAME = "Non-Disclosure Agreement (Mutual)"
 
 export function useNDATemplate() {
   return useQuery({
-    queryKey: ["template", NDA_TEMPLATE_ID],
-    queryFn: () => getTemplate(NDA_TEMPLATE_ID),
+    queryKey: ["templates"],
+    queryFn: listTemplates,
     staleTime: Infinity,
+    select: (templates) => {
+      const nda = templates.find((t) => t.name === NDA_TEMPLATE_NAME)
+      if (!nda) throw new Error(`Template "${NDA_TEMPLATE_NAME}" not found`)
+      return nda
+    },
   })
 }

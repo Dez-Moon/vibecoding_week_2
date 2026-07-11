@@ -3,21 +3,20 @@
 import { useCallback, useState } from "react"
 import { FileText, Loader2 } from "lucide-react"
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { useNDATemplate } from "@/hooks/use-template"
 import { useNDARenderedPreview } from "@/hooks/use-render"
 import { NDAForm } from "./nda-form"
 import { NDAPreview } from "./nda-preview"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import type { NDAFormSchema } from "@/lib/validation"
 
 export function NDACreator() {
   const [formValues, setFormValues] = useState<Partial<NDAFormSchema> | null>(null)
 
   const templateQuery = useNDATemplate()
-  const previewQuery = useNDARenderedPreview(formValues)
+  const previewQuery = useNDARenderedPreview(templateQuery.data?.id, formValues)
 
   const handleFormChange = useCallback((values: Partial<NDAFormSchema> | null) => {
     setFormValues(values)
