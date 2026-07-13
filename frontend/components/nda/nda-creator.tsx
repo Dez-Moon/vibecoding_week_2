@@ -7,6 +7,7 @@ import { useNDARenderedPreview } from "@/hooks/use-render"
 import { ChatPanel } from "@/components/chat/chat-panel"
 import { NDAPreview } from "./nda-preview"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { Button } from "@/components/ui/button"
 
 interface NDACreatorProps {
   templateId: number
