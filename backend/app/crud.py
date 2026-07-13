@@ -2,7 +2,7 @@ import json
 
 from sqlalchemy.orm import Session
 
-from backend.app import models, schemas
+from app import models, schemas
 
 
 def get_templates(db: Session, skip: int = 0, limit: int = 100):

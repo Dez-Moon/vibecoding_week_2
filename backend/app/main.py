@@ -5,23 +5,25 @@ from pathlib import Path
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from backend.app import models, routes
-from backend.app.database import engine, SessionLocal
+from app import models, routes
+from app.database import engine, SessionLocal
+
+BACKEND_ROOT = Path(__file__).parent.parent
 
 
 def seed_templates():
-    data_dir = Path(__file__).parent.parent / "data" / "templates"
+    data_dir = BACKEND_ROOT / "data" / "templates"
     db = SessionLocal()
     try:
         for filepath in data_dir.glob("*.json"):
             with open(filepath) as f:
                 data = json.load(f)
             for template_data in data:
-                from backend.app import schemas as schemas_mod
+                from app import schemas as schemas_mod
                 existing = db.query(models.Template).filter_by(name=template_data["name"]).first()
                 if not existing:
                     schema = schemas_mod.TemplateCreate(**template_data)
-                    from backend.app import crud as crud_mod
+                    from app import crud as crud_mod
                     crud_mod.create_template(db, schema)
     finally:
         db.close()

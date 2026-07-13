@@ -10,8 +10,11 @@ echo ""
 # Start backend
 echo "Starting backend (http://localhost:8000)..."
 cd "$ROOT_DIR/backend"
-uv run uvicorn app.main:app --reload --port 8000 &
+uv run python -m uvicorn app.main:app --reload --port 8000 &
 BACKEND_PID=$!
+
+# Wait for backend to start
+sleep 3
 
 # Start frontend
 echo "Starting frontend (http://localhost:3000)..."
