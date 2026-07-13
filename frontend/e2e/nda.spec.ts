@@ -1,6 +1,10 @@
 import { test, expect } from "@playwright/test"
 import path from "path"
 
+<<<<<<< HEAD
+=======
+// Backend and frontend URLs
+>>>>>>> origin/feat/nda-creator-frontend
 const API_URL = process.env.E2E_API_URL ?? "http://localhost:8000"
 const FRONTEND_URL = process.env.E2E_FRONTEND_URL ?? "http://localhost:3000"
 
@@ -22,10 +26,31 @@ test.describe("NDA Creator — Full E2E Flow", () => {
     // Header present
     await expect(page.getByRole("heading", { name: "Mutual NDA Creator" })).toBeVisible({ timeout: 10000 })
 
+<<<<<<< HEAD
     // Form fields present with seed data defaults
     const partyA = page.getByLabel(/Disclosing Party/i)
     await expect(partyA).toBeVisible({ timeout: 5000 })
     await expect(partyA).toHaveValue("Acme Corp.", { timeout: 5000 })
+=======
+    // Template name loaded
+    await expect(page.getByRole("heading", { name: "Non-Disclosure Agreement (Mutual)" })).toBeVisible()
+
+    // All form fields visible and pre-filled with defaults
+    await expect(page.getByLabel("Disclosing Party")).toBeVisible()
+    await expect(page.getByLabel("Disclosing Party")).toHaveValue("[Party A Name]")
+
+    await expect(page.getByLabel("Receiving Party")).toBeVisible()
+    await expect(page.getByLabel("Receiving Party")).toHaveValue("[Party B Name]")
+
+    await expect(page.getByLabel("Effective Date")).toBeVisible()
+    await expect(page.getByLabel("Term (years)")).toBeVisible()
+    await expect(page.getByLabel("Governing State / Country")).toBeVisible()
+    await expect(page.getByLabel("Business Purpose")).toBeVisible()
+
+    // Download buttons present
+    await expect(page.getByRole("button", { name: /Download \.txt/i })).toBeVisible()
+    await expect(page.getByRole("button", { name: /Download PDF/i })).toBeVisible()
+>>>>>>> origin/feat/nda-creator-frontend
 
     // Preview renders with default variables (not empty state)
     await expect(page.getByRole("heading", { name: "NON-DISCLOSURE AGREEMENT", exact: true })).toBeVisible({ timeout: 5000 })
@@ -33,6 +58,7 @@ test.describe("NDA Creator — Full E2E Flow", () => {
 
   test("M2: Live preview updates as user types", async ({ page }) => {
     await page.goto(FRONTEND_URL)
+<<<<<<< HEAD
     await expect(page.getByLabel(/Disclosing Party/i)).toBeVisible({ timeout: 10000 })
 
     // Fill party A — preview should update with custom value
@@ -41,15 +67,32 @@ test.describe("NDA Creator — Full E2E Flow", () => {
 
     // Fill party B
     await page.getByLabel(/Receiving Party/i).fill("Beta LLC")
+=======
+    await expect(page.getByLabel("Disclosing Party")).toBeVisible({ timeout: 10000 })
+
+    // Fill party A — preview should update with custom value
+    await page.getByLabel("Disclosing Party").fill("Acme Corp.")
+    await expect(page.getByText("Acme Corp.").first()).toBeVisible({ timeout: 5000 })
+
+    // Fill party B
+    await page.getByLabel("Receiving Party").fill("Beta LLC")
+>>>>>>> origin/feat/nda-creator-frontend
     await expect(page.getByText("Beta LLC").first()).toBeVisible({ timeout: 5000 })
   })
 
   test("M3: Download .txt works", async ({ page }) => {
     await page.goto(FRONTEND_URL)
+<<<<<<< HEAD
     await expect(page.getByLabel(/Disclosing Party/i)).toBeVisible({ timeout: 10000 })
 
     await page.getByLabel(/Disclosing Party/i).fill("Acme Corp.")
     await page.getByLabel(/Receiving Party/i).fill("Beta LLC")
+=======
+    await expect(page.getByLabel("Disclosing Party")).toBeVisible({ timeout: 10000 })
+
+    await page.getByLabel("Disclosing Party").fill("Acme Corp.")
+    await page.getByLabel("Receiving Party").fill("Beta LLC")
+>>>>>>> origin/feat/nda-creator-frontend
 
     const downloadPromise = page.waitForEvent("download")
     await page.getByRole("button", { name: /Download \.txt/i }).click()
@@ -73,10 +116,17 @@ test.describe("NDA Creator — Full E2E Flow", () => {
 
   test("M4: Download PDF works and produces valid PDF", async ({ page }) => {
     await page.goto(FRONTEND_URL)
+<<<<<<< HEAD
     await expect(page.getByLabel(/Disclosing Party/i)).toBeVisible({ timeout: 10000 })
 
     await page.getByLabel(/Disclosing Party/i).fill("Acme Corp.")
     await page.getByLabel(/Receiving Party/i).fill("Beta LLC")
+=======
+    await expect(page.getByLabel("Disclosing Party")).toBeVisible({ timeout: 10000 })
+
+    await page.getByLabel("Disclosing Party").fill("Acme Corp.")
+    await page.getByLabel("Receiving Party").fill("Beta LLC")
+>>>>>>> origin/feat/nda-creator-frontend
 
     const downloadPromise = page.waitForEvent("download")
     await page.getByRole("button", { name: /Download PDF/i }).click()
@@ -89,31 +139,52 @@ test.describe("NDA Creator — Full E2E Flow", () => {
     const tmpPath = path.join("/tmp", filename)
     await download.saveAs(tmpPath)
     const fs = await import("fs")
+<<<<<<< HEAD
     const buffer = fs.readFileSync(tmpPath)
 
     // PDF magic bytes
     expect(buffer.subarray(0, 4).toString()).toBe("%PDF")
+=======
+    const bytes = fs.readFileSync(tmpPath)
+    expect(bytes.slice(0, 4).toString()).toBe("%PDF") // PDF magic bytes
+>>>>>>> origin/feat/nda-creator-frontend
   })
 
   test("M5: Form validation prevents empty party names and shows errors", async ({ page }) => {
     await page.goto(FRONTEND_URL)
 
+<<<<<<< HEAD
     const partyA = page.getByLabel(/Disclosing Party/i)
     await expect(partyA).toBeVisible({ timeout: 10000 })
     await expect(partyA).toHaveValue("Acme Corp.", { timeout: 5000 })
 
     // Trigger field validation by clearing and blurring
+=======
+    const partyA = page.getByLabel("Disclosing Party")
+    await expect(partyA).toBeVisible({ timeout: 10000 })
+    await expect(partyA).toHaveValue("Acme Corp.", { timeout: 5000 })
+
+    // Trigger form submission to run required-field validation
+>>>>>>> origin/feat/nda-creator-frontend
     await partyA.fill("")
     await partyA.blur()
     await page.keyboard.press("Tab")
 
+<<<<<<< HEAD
     // FieldError renders a <span> wrapping the AlertTriangle icon
+=======
+    // Find the error message (span with the warning icon, same container as the <p>)
+>>>>>>> origin/feat/nda-creator-frontend
     const partyAError = page.locator("span:has(svg)").filter({ hasText: /Party A name is required/i }).first()
     await partyAError.waitFor({ state: "attached", timeout: 8000 })
     await expect(partyAError).toBeVisible()
 
     // Clear party B and trigger its validation
+<<<<<<< HEAD
     const partyB = page.getByLabel(/Receiving Party/i)
+=======
+    const partyB = page.getByLabel("Receiving Party")
+>>>>>>> origin/feat/nda-creator-frontend
     await partyB.fill("")
     await partyB.blur()
     await page.keyboard.press("Tab")
