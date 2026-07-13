@@ -2,11 +2,10 @@
 
 import { useQuery } from "@tanstack/react-query"
 import { renderTemplate } from "@/lib/api"
-import type { NDAFormSchema } from "@/lib/validation"
 
 export function useNDARenderedPreview(
   templateId: number | undefined,
-  values: Partial<NDAFormSchema> | null
+  values: Record<string, string> | null
 ) {
   return useQuery({
     queryKey: ["render", templateId, values],

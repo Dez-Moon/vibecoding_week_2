@@ -1,20 +1,21 @@
 "use client"
 
 import { useCallback, useState } from "react"
-import { Download, Loader2, FileText } from "lucide-react"
+import { Download, Loader2, FileText, Save, Check } from "lucide-react"
 import { pdf, Font } from "@react-pdf/renderer"
 
 import { Button } from "@/components/ui/button"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { downloadText, sanitizeFilename } from "@/lib/download"
 import { NDAPDFDocument, fontSources } from "./nda-pdf-document"
-import type { NDAFormSchema } from "@/lib/validation"
+import { saveDocument } from "@/lib/api-auth"
+import { useAuth } from "@/contexts/auth-context"
 import type { NDATemplate } from "@/lib/types"
 
 interface NDAPreviewProps {
   template: NDATemplate
   renderedContent: string | null
-  formValues: Partial<NDAFormSchema> | null
+  formValues: Record<string, string> | null
   isLoading: boolean
   error: Error | null
 }
@@ -28,6 +29,29 @@ export function NDAPreview({
 }: NDAPreviewProps) {
   const [pdfLoading, setPdfLoading] = useState(false)
   const [pdfError, setPdfError] = useState<string | null>(null)
+  const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "error">("idle")
+  const { user } = useAuth()
+
+  const handleSave = useCallback(async () => {
+    if (!renderedContent || !user) return
+    setSaveState("saving")
+    try {
+      await saveDocument({
+        template_id: template.id,
+        name: formValues?.party_a_name
+          ? `${template.name} - ${formValues.party_a_name}`
+          : template.name,
+        doc_type: template.name,
+        content: renderedContent,
+      })
+      setSaveState("saved")
+      setTimeout(() => setSaveState("idle"), 2000)
+    } catch (err) {
+      console.error("[NDA] Save failed:", err)
+      setSaveState("error")
+      setTimeout(() => setSaveState("idle"), 3000)
+    }
+  }, [renderedContent, user, template, formValues])
 
   const handleDownloadText = useCallback(() => {
     if (!renderedContent) return
@@ -96,6 +120,24 @@ export function NDAPreview({
           )}
         </div>
         <div className="flex items-center gap-2">
+          {user && renderedContent && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleSave}
+              disabled={saveState === "saving" || saveState === "saved"}
+              className="h-8 gap-1.5 text-[12px]"
+            >
+              {saveState === "saving" ? (
+                <Loader2 className="size-3.5 animate-spin" />
+              ) : saveState === "saved" ? (
+                <Check className="size-3.5 text-green-600" />
+              ) : (
+                <Save className="size-3.5" />
+              )}
+              {saveState === "saved" ? "Saved!" : saveState === "error" ? "Retry save" : "Save"}
+            </Button>
+          )}
           <Button
             variant="outline"
             size="sm"
@@ -130,6 +172,14 @@ export function NDAPreview({
             <div className="mb-4">
               <Alert variant="destructive" className="py-2 text-xs">
                 <AlertDescription>{pdfError}</AlertDescription>
+              </Alert>
+            </div>
+          )}
+
+          {saveState === "error" && (
+            <div className="mb-4">
+              <Alert variant="destructive" className="py-2 text-xs">
+                <AlertDescription>Failed to save document. Please try again.</AlertDescription>
               </Alert>
             </div>
           )}
