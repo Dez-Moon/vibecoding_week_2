@@ -1,4 +1,4 @@
-import type { NDATemplate, RenderRequest, RenderResponse, TemplateListItem } from "./types"
+import type { ChatRequest, ChatResponse, GreetingResponse, NDATemplate, RenderRequest, RenderResponse, TemplateListItem } from "./types"
 
 const API_BASE =
   process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000"
@@ -42,5 +42,17 @@ export function renderTemplate(
   return apiFetch<RenderResponse>(`/templates/${templateId}/render`, {
     method: "POST",
     body: JSON.stringify(body),
+  })
+}
+
+export function getGreeting(templateName: string): Promise<GreetingResponse> {
+  const params = new URLSearchParams({ template_name: templateName })
+  return apiFetch<GreetingResponse>(`/chat/greeting?${params}`)
+}
+
+export function sendChatMessage(payload: ChatRequest): Promise<ChatResponse> {
+  return apiFetch<ChatResponse>("/chat/message", {
+    method: "POST",
+    body: JSON.stringify(payload),
   })
 }
