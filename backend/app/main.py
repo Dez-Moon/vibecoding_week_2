@@ -5,7 +5,10 @@ from pathlib import Path
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app import models, routes
+from app import models, routes, chat_routes
+from app.api import auth as auth_router
+from app.api import documents as documents_router
+from app.api import health as health_router
 from app.database import engine, SessionLocal
 
 BACKEND_ROOT = Path(__file__).parent.parent
@@ -45,3 +48,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 app.include_router(routes.router)
+app.include_router(auth_router.router)
+app.include_router(documents_router.router)
+app.include_router(health_router.router)
+app.include_router(chat_routes.router, prefix="/api")
