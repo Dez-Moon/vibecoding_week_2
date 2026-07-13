@@ -9,20 +9,40 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 interface ChatPanelProps {
   templateName: string
   onFieldsExtracted: (fields: Record<string, string>) => void
+  onComplete: (fields: Record<string, string>) => void
 }
 
-export function ChatPanel({ templateName, onFieldsExtracted }: ChatPanelProps) {
-  const { messages, input, setInput, send, isLoading, isComplete } = useChat({
+export function ChatPanel({ templateName, onFieldsExtracted, onComplete }: ChatPanelProps) {
+  const { messages, input, setInput, send, isLoading, isComplete, extractedFields, loadGreeting } = useChat({
     templateName,
     onFieldsExtracted,
   })
   const messagesEndRef = useRef<HTMLDivElement>(null)
-  const scrollContainerRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
+  // Load greeting on mount
+  useEffect(() => {
+    loadGreeting()
+  }, [loadGreeting])
+
+  // Auto-scroll to bottom
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }, [messages])
+
+  // Auto-focus input after send
+  useEffect(() => {
+    if (messages.length > 0) {
+      textareaRef.current?.focus()
+    }
+  }, [messages])
+
+  // Call onComplete when done
+  useEffect(() => {
+    if (isComplete) {
+      onComplete(extractedFields)
+    }
+  }, [isComplete, extractedFields, onComplete])
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -44,7 +64,7 @@ export function ChatPanel({ templateName, onFieldsExtracted }: ChatPanelProps) {
 
   return (
     <div className="flex flex-col h-full">
-      <ScrollArea className="flex-1 px-4" viewportRef={scrollContainerRef}>
+      <ScrollArea className="flex-1 px-4">
         <div className="max-w-2xl mx-auto space-y-4 py-4">
           {messages.map((message, index) => (
             <div
