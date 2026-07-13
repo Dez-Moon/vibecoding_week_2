@@ -32,7 +32,7 @@ export function getTemplate(id: number): Promise<NDATemplate> {
 }
 
 export function listTemplates(): Promise<TemplateListItem[]> {
-  return apiFetch<TemplateListItem[]>("/templates")
+  return apiFetch<TemplateListItem[]>("/templates/")
 }
 
 export function renderTemplate(
