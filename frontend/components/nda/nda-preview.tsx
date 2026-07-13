@@ -4,17 +4,15 @@ import { useCallback, useState } from "react"
 import { Download, Loader2 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
-import { Separator } from "@/components/ui/separator"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { downloadText, sanitizeFilename } from "@/lib/download"
 import { NDAPDFDocument, fontSources } from "./nda-pdf-document"
-import type { NDAFormSchema } from "@/lib/validation"
 import type { NDATemplate } from "@/lib/types"
 
 interface NDAPreviewProps {
   template: NDATemplate
   renderedContent: string | null
-  formValues: Partial<NDAFormSchema> | null
+  formValues: Record<string, string> | null
   isLoading: boolean
   error: Error | null
 }
@@ -26,116 +24,80 @@ export function NDAPreview({
   isLoading,
   error,
 }: NDAPreviewProps) {
-  const [pdfLoading, setPdfLoading] = useState(false)
   const [pdfError, setPdfError] = useState<string | null>(null)
 
   const handleDownloadText = useCallback(() => {
     if (!renderedContent) return
-    const partyAName =
-      formValues?.party_a_name ??
-      template.default_variables.party_a_name ??
-      "nda"
-    const filename = `NDA_${sanitizeFilename(partyAName)}.txt`
+    const filename = sanitizeFilename(`${template.name}.txt`)
     downloadText(renderedContent, filename)
-  }, [renderedContent, formValues, template])
+  }, [renderedContent, template.name])
 
-  const handleDownloadPDF = useCallback(async () => {
+  const handleDownloadPdf = useCallback(async () => {
     if (!renderedContent) return
-    setPdfLoading(true)
     setPdfError(null)
-
-    let objectUrl: string | null = null
-
     try {
       const { pdf } = await import("@react-pdf/renderer")
-      // Register fonts once before generating the document.
-      // react-pdf v4: SingleLoad shape is { src, family, fontWeight?, fontStyle? }
-      const { Font } = await import("@react-pdf/renderer")
-      fontSources.forEach(({ src, family, fontWeight, fontStyle }) =>
-        Font.register({ src, family, fontWeight, fontStyle })
-      )
-
-      const partyAName =
-        formValues?.party_a_name ??
-        template.default_variables.party_a_name ??
-        "nda"
-      const partyBName = formValues?.party_b_name ?? ""
-      const filename = `NDA_${sanitizeFilename(partyAName)}.pdf`
+      const { NDAPDFDocument, fontSources } = await import("./nda-pdf-document")
 
       const blob = await pdf(
         <NDAPDFDocument
           renderedContent={renderedContent}
-          partyAName={partyAName}
-          partyBName={partyBName}
+          documentName={template.name}
         />
       ).toBlob()
 
-      objectUrl = URL.createObjectURL(blob)
-      const a = document.createElement("a")
-      a.href = objectUrl
-      a.download = filename
-      document.body.appendChild(a)
+      const url = URL.createObjectURL(blob)
+      const a = window.document.createElement("a")
+      a.href = url
+      a.download = sanitizeFilename(`${template.name}.pdf`)
       a.click()
-      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
     } catch (err) {
       setPdfError(
         "PDF generation failed. Please try downloading as text instead."
       )
       console.error("[NDA] PDF generation error:", err)
-    } finally {
-      if (objectUrl) URL.revokeObjectURL(objectUrl)
-      setPdfLoading(false)
     }
-  }, [renderedContent, formValues, template])
+  }, [renderedContent, template.name])
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex items-center justify-between px-6 py-4 border-b shrink-0">
-        <div>
-          <h2 className="text-sm font-semibold">Document Preview</h2>
-          <p className="text-xs text-muted-foreground">
-            Live preview — updates as you type
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
+      <div className="flex items-center justify-between px-6 py-3 border-b shrink-0">
+        <span className="text-xs font-medium text-muted-foreground">Preview</span>
+        <div className="flex gap-2">
           <Button
-            variant="outline"
             size="sm"
+            variant="outline"
             onClick={handleDownloadText}
             disabled={!renderedContent}
+            className="h-7 text-xs"
           >
-            <Download className="mr-1.5 size-3.5" />
-            Download .txt
+            <Download className="size-3.5 mr-1.5" />
+            TXT
           </Button>
           <Button
             size="sm"
-            onClick={handleDownloadPDF}
-            disabled={!renderedContent || pdfLoading}
+            variant="outline"
+            onClick={handleDownloadPdf}
+            disabled={!renderedContent}
+            className="h-7 text-xs"
           >
-            {pdfLoading ? (
-              <Loader2 className="mr-1.5 size-3.5 animate-spin" />
-            ) : (
-              <Download className="mr-1.5 size-3.5" />
-            )}
-            Download .pdf
+            <Download className="size-3.5 mr-1.5" />
+            PDF
           </Button>
         </div>
       </div>
 
-      {pdfError && (
-        <div className="px-6 pt-4 shrink-0">
-          <Alert variant="destructive">
+      <div className="flex-1 overflow-y-auto px-6 py-4">
+        {pdfError && (
+          <Alert variant="destructive" className="mb-4">
             <AlertDescription>{pdfError}</AlertDescription>
           </Alert>
-        </div>
-      )}
+        )}
 
-      <Separator />
-
-      <div className="flex-1 overflow-auto px-8 py-6">
         {isLoading && (
-          <div className="flex items-center justify-center h-32">
-            <Loader2 className="size-6 animate-spin text-muted-foreground" />
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="size-5 animate-spin text-muted-foreground" />
           </div>
         )}
 
@@ -149,7 +111,7 @@ export function NDAPreview({
 
         {!isLoading && !error && !renderedContent && (
           <p className="text-sm text-muted-foreground">
-            Fill in the form to preview your NDA.
+            Fill in the form to preview your document.
           </p>
         )}
 

@@ -1,25 +1,29 @@
 "use client"
 
 import { useCallback, useState } from "react"
-import { FileText, Loader2 } from "lucide-react"
+import { ArrowLeft, FileText, Loader2 } from "lucide-react"
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { useNDATemplate } from "@/hooks/use-template"
-import { useNDARenderedPreview } from "@/hooks/use-render"
+import { useTemplatePreview } from "@/hooks/use-render"
 import { NDAForm } from "./nda-form"
 import { NDAPreview } from "./nda-preview"
-import type { NDAFormSchema } from "@/lib/validation"
 
-export function NDACreator() {
-  const [formValues, setFormValues] = useState<Partial<NDAFormSchema> | null>(null)
+interface NDACreatorProps {
+  templateId: number
+  onBack: () => void
+}
 
-  const templateQuery = useNDATemplate()
-  const previewQuery = useNDARenderedPreview(formValues)
+export function NDACreator({ templateId, onBack }: NDACreatorProps) {
+  const [formValues, setFormValues] = useState<Record<string, string> | null>(null)
 
-  const handleFormChange = useCallback((values: Partial<NDAFormSchema> | null) => {
+  const templateQuery = useNDATemplate(templateId)
+  const previewQuery = useTemplatePreview(templateId, formValues)
+
+  const handleFormChange = useCallback((values: Record<string, string> | null) => {
     setFormValues(values)
   }, [])
 
@@ -54,32 +58,30 @@ export function NDACreator() {
   return (
     <div className="min-h-[calc(100vh-4rem)] flex flex-col">
       <header className="border-b bg-background shrink-0">
-        <div className="max-w-screen-xl mx-auto px-6 py-4 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
+            <Button variant="ghost" size="icon" onClick={onBack} className="size-8">
+              <ArrowLeft className="size-4" />
+            </Button>
             <div className="flex items-center justify-center size-9 rounded-lg bg-primary/10">
               <FileText className="size-5 text-primary" />
             </div>
             <div>
-              <h1 className="text-base font-semibold leading-tight">
-                Mutual NDA Creator
-              </h1>
-              <p className="text-xs text-muted-foreground">
-                {template?.name}
-              </p>
+              <h1 className="text-base font-semibold leading-tight">{template?.name}</h1>
+              <p className="text-xs text-muted-foreground">{template?.category}</p>
             </div>
           </div>
           <Badge variant="outline" className="text-xs">
-            {template?.category}
+            {template?.description}
           </Badge>
         </div>
       </header>
 
-      <main className="flex-1 grid flex-shrink-0 lg:grid-cols-2 gap-0">
+      <main className="flex-1 grid shrink-0 lg:grid-cols-2 gap-0">
         <div className="border-r bg-muted/20">
           <div className="max-h-[calc(100vh-4rem)] overflow-y-auto">
             <div className="px-6 py-6">
               <div className="mb-6">
-                <h2 className="text-sm font-semibold mb-1">Template Details</h2>
                 <p className="text-xs text-muted-foreground leading-relaxed">
                   {template?.description}
                 </p>
@@ -88,10 +90,11 @@ export function NDACreator() {
               <Separator className="mb-6" />
 
               <div className="mb-6">
-                <h2 className="text-sm font-semibold mb-4">
-                  Fill in the Details
-                </h2>
-                <NDAForm template={template!} onFormChange={handleFormChange} />
+                <h2 className="text-sm font-semibold mb-4">Fill in the Details</h2>
+                <NDAForm
+                  template={template!}
+                  onFormChange={handleFormChange}
+                />
               </div>
             </div>
           </div>

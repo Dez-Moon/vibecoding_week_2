@@ -9,7 +9,7 @@ from backend.app.database import engine, SessionLocal
 
 
 def seed_templates():
-    data_dir = Path("backend/data/templates")
+    data_dir = Path(__file__).parent.parent / "data" / "templates"
     db = SessionLocal()
     try:
         for filepath in data_dir.glob("*.json"):
