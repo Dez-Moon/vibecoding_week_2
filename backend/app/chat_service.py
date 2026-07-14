@@ -306,11 +306,7 @@ def process_message_stream(
     user_message: str,
     extracted_fields: Dict[str, str],
 ):
-    """Stream text chunks while extracting fields from the same model call.
-
-    The model is instructed to output its reply text first, then a JSON marker
-    line that contains the structured extraction. We parse both from the stream.
-    """
+    """Stream text chunks, then parse JSON extraction from the streamed response."""
     required_fields = REQUIRED_FIELDS.get(template_name, [])
     all_required_set = set(required_fields)
 
@@ -320,6 +316,8 @@ def process_message_stream(
 
     messages = _build_messages_streaming(template_name, required_fields, history, user_message, extracted_fields)
 
+    streamed_text = ""
+    last_forwarded = 0
     response = litellm.completion(
         model="openrouter/openai/gpt-oss-120b",
         api_key=api_key,
@@ -327,54 +325,24 @@ def process_message_stream(
         temperature=0.3,
         stream=True,
     )
-
-    full_text = ""
-    json_buffer = ""
-    in_json = False
-    extraction = None
-
     for chunk in response:
         content = chunk.choices[0].delta.content or ""
-        full_text += content
+        streamed_text += content
 
-        if not in_json:
-            json_start = full_text.rfind("\n__JSON__\n")
-            if json_start != -1:
-                in_json = True
-                json_buffer = full_text[json_start + 9:]
-                yield {"type": "text", "content": full_text[:json_start]}
-        else:
-            json_buffer += content
+        # Forward text up to the __JSON__ marker boundary (not including the marker itself)
+        marker_pos = streamed_text.rfind("\n__JSON__\n")
+        if marker_pos != -1 and last_forwarded < marker_pos:
+            yield {"type": "text", "content": streamed_text[last_forwarded:marker_pos]}
+            last_forwarded = marker_pos
 
-        if in_json and json_buffer.strip():
-            try:
-                parsed = json.loads(json_buffer.strip())
-                extraction = FieldExtraction.model_validate(parsed)
-                break
-            except Exception:
-                pass
-
-    # Strip __JSON__ section from displayed response
-    clean_text = full_text
-    json_section_start = full_text.rfind("\n__JSON__\n")
-    if json_section_start != -1:
-        clean_text = full_text[:json_section_start]
-
-    # If no JSON parsed, try a second non-streaming call with structured output
-    if extraction is None:
-        structured_messages = _build_messages(history, template_name, user_message, extracted_fields)
-        resp = litellm.completion(
-            model="openrouter/openai/gpt-oss-120b",
-            api_key=api_key,
-            messages=structured_messages,
-            temperature=0.3,
-            response_format=FieldExtraction,
-        )
-        raw = resp.choices[0].message.content or "{}"
-        try:
-            extraction = FieldExtraction.model_validate_json(raw)
-        except Exception:
-            pass
+    # Parse JSON from streamed text
+    json_start = streamed_text.rfind("\n__JSON__\n")
+    json_str = streamed_text[json_start + 9:].strip() if json_start != -1 else "{}"
+    extraction = None
+    try:
+        extraction = FieldExtraction.model_validate_json(json_str)
+    except Exception:
+        pass
 
     # Build final result
     new_extracted = dict(extracted_fields)
@@ -388,7 +356,11 @@ def process_message_stream(
 
     yield {
         "type": "done",
-        "response": clean_text if clean_text.strip() else "Done.",
+        "response": (
+            extraction.response
+            if extraction and extraction.response
+            else (streamed_text[:json_start] if json_start != -1 else streamed_text)
+        ),
         "extracted_fields": new_extracted,
         "is_complete": is_complete,
         "missing_fields": missing,
