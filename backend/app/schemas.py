@@ -53,6 +53,7 @@ class ExtractedField(BaseModel):
 
 class FieldExtraction(BaseModel):
     model_config = ConfigDict(from_attributes=True)
+    response: str
     extracted_fields: List[ExtractedField] = []
     is_complete: bool = False
     missing_fields: List[str] = []

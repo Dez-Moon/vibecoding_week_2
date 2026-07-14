@@ -118,8 +118,11 @@ def _build_system_prompt(template_name: str, required_fields: List[str]) -> str:
     return (
         f"You are an expert legal document assistant helping to fill in a {template_name}.\n"
         "Your task is to conversationally extract the required information from the user.\n"
+        "Always populate the 'response' field with your conversational reply to the user "
+        "(the message they will see in the chat) — never leave it empty.\n"
         "For each piece of information you gather, include it in the structured output.\n"
-        "When all required fields are collected, set is_complete to true and provide a brief summary.\n"
+        "When all required fields are collected, set is_complete to true and provide a brief summary "
+        "in the 'response' field.\n"
         "Always be professional, clear, and concise in your responses.\n"
         "IMPORTANT: Never make up information. Only fill in fields the user has explicitly provided.\n"
         f"Required fields: {', '.join(required_fields)}"
@@ -229,7 +232,7 @@ def process_message(
     except Exception:
         # Fallback: treat as plain text response
         return {
-            "response": raw_content,
+            "response": raw_content or "I'm sorry, I couldn't process that. Could you try rephrasing?",
             "extracted_fields": extracted_fields,
             "is_complete": False,
             "missing_fields": list(all_required_set - set(extracted_fields.keys())),
@@ -246,7 +249,7 @@ def process_message(
     is_complete = len(missing) == 0 and len(required_fields) > 0
 
     return {
-        "response": raw_content,
+        "response": extraction.response or "I've collected the information. Let me confirm what I have so far.",
         "extracted_fields": new_extracted,
         "is_complete": is_complete,
         "missing_fields": missing,
