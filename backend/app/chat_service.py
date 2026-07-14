@@ -1,6 +1,6 @@
 import json
 import os
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Generator, List, Optional
 
 import litellm
 
@@ -129,6 +129,22 @@ def _build_system_prompt(template_name: str, required_fields: List[str]) -> str:
     )
 
 
+def _build_system_prompt_streaming(template_name: str, required_fields: List[str]) -> str:
+    return (
+        f"You are an expert legal document assistant helping to fill in a {template_name}.\n"
+        "Your task is to conversationally extract the required information from the user.\n"
+        "Write your reply text in normal markdown. When your reply is complete, "
+        "on a new line write:\n__JSON__\n"
+        "Then output a valid JSON object with exactly these fields:\n"
+        "- response: your conversational reply text (same as what you wrote above)\n"
+        "- extracted_fields: list of {field_name, field_value, confidence} for each piece of info gathered\n"
+        "- is_complete: true when all required fields have been provided\n"
+        "- missing_fields: list of field names still needed\n"
+        "Always include the __JSON__ marker and JSON object at the end — never omit it.\n"
+        f"Required fields: {', '.join(required_fields)}"
+    )
+
+
 def _build_messages(
     history: List[ChatMessage],
     template_name: str,
@@ -170,6 +186,42 @@ def _build_messages(
     return messages
 
 
+def _build_messages_streaming(
+    template_name: str,
+    required_fields: List[str],
+    history: List[ChatMessage],
+    user_message: str,
+    extracted_fields: Dict[str, str],
+) -> List[Dict[str, str]]:
+    system_prompt = _build_system_prompt_streaming(template_name, required_fields)
+
+    messages = [{"role": "system", "content": system_prompt}]
+
+    for msg in history:
+        messages.append({"role": msg.role, "content": msg.content})
+
+    current_keys = set(extracted_fields.keys())
+    missing = [f for f in required_fields if f not in current_keys]
+
+    context_parts = []
+    if extracted_fields:
+        context_parts.append("Current extracted fields:\n" + "\n".join(
+            f"- {k}: {v}" for k, v in extracted_fields.items()
+        ))
+    if missing:
+        context_parts.append(f"Missing fields to collect: {', '.join(missing)}")
+
+    if context_parts:
+        messages.append({
+            "role": "user",
+            "content": f"{user_message}\n\n[Internal context: {'; '.join(context_parts)}]",
+        })
+    else:
+        messages.append({"role": "user", "content": user_message})
+
+    return messages
+
+
 def _call_llm(messages: List[Dict[str, str]], template_name: str) -> str:
     api_key = os.environ.get("OPENROUTER_API_KEY")
     if not api_key:
@@ -202,13 +254,6 @@ def process_message(
     required_fields = REQUIRED_FIELDS.get(template_name, [])
     all_required_set = set(required_fields)
 
-    # Collect all user-provided text so far
-    conversation_text = " ".join(
-        msg.content for msg in history if msg.role == "user"
-    )
-    conversation_text += " " + user_message
-
-    # Single LLM call with structured output
     api_key = os.environ.get("OPENROUTER_API_KEY")
     if not api_key:
         raise ValueError("OPENROUTER_API_KEY environment variable is not set")
@@ -225,12 +270,10 @@ def process_message(
 
     raw_content = response.choices[0].message.content
 
-    # Parse structured output
     try:
         parsed = json.loads(raw_content)
         extraction = FieldExtraction.model_validate(parsed)
     except Exception:
-        # Fallback: treat as plain text response
         return {
             "response": raw_content or "I'm sorry, I couldn't process that. Could you try rephrasing?",
             "extracted_fields": extracted_fields,
@@ -238,18 +281,111 @@ def process_message(
             "missing_fields": list(all_required_set - set(extracted_fields.keys())),
         }
 
-    # Merge new fields into existing extracted_fields
     new_extracted = dict(extracted_fields)
     for field in extraction.extracted_fields:
         new_extracted[field.field_name] = field.field_value
 
-    # Determine missing fields
     current_keys = set(new_extracted.keys())
     missing = [f for f in required_fields if f not in current_keys]
     is_complete = len(missing) == 0 and len(required_fields) > 0
 
     return {
         "response": extraction.response or "I've collected the information. Let me confirm what I have so far.",
+        "extracted_fields": new_extracted,
+        "is_complete": is_complete,
+        "missing_fields": missing,
+    }
+
+
+def process_message_stream(
+    history: List[ChatMessage],
+    template_name: str,
+    user_message: str,
+    extracted_fields: Dict[str, str],
+):
+    """Stream text chunks while extracting fields from the same model call.
+
+    The model is instructed to output its reply text first, then a JSON marker
+    line that contains the structured extraction. We parse both from the stream.
+    """
+    required_fields = REQUIRED_FIELDS.get(template_name, [])
+    all_required_set = set(required_fields)
+
+    api_key = os.environ.get("OPENROUTER_API_KEY")
+    if not api_key:
+        raise ValueError("OPENROUTER_API_KEY environment variable is not set")
+
+    messages = _build_messages_streaming(template_name, required_fields, history, user_message, extracted_fields)
+
+    response = litellm.completion(
+        model="openrouter/openai/gpt-oss-120b",
+        api_key=api_key,
+        messages=messages,
+        temperature=0.3,
+        stream=True,
+    )
+
+    full_text = ""
+    json_buffer = ""
+    in_json = False
+    extraction = None
+
+    for chunk in response:
+        content = chunk.choices[0].delta.content or ""
+        full_text += content
+
+        if not in_json:
+            json_start = full_text.rfind("\n__JSON__\n")
+            if json_start != -1:
+                in_json = True
+                json_buffer = full_text[json_start + 9:]
+                yield {"type": "text", "content": full_text[:json_start]}
+        else:
+            json_buffer += content
+
+        if in_json and json_buffer.strip():
+            try:
+                parsed = json.loads(json_buffer.strip())
+                extraction = FieldExtraction.model_validate(parsed)
+                break
+            except Exception:
+                pass
+
+    # Strip __JSON__ section from displayed response
+    clean_text = full_text
+    json_section_start = full_text.rfind("\n__JSON__\n")
+    if json_section_start != -1:
+        clean_text = full_text[:json_section_start]
+
+    # If no JSON parsed, try a second non-streaming call with structured output
+    if extraction is None:
+        structured_messages = _build_messages(history, template_name, user_message, extracted_fields)
+        resp = litellm.completion(
+            model="openrouter/openai/gpt-oss-120b",
+            api_key=api_key,
+            messages=structured_messages,
+            temperature=0.3,
+            response_format=FieldExtraction,
+        )
+        raw = resp.choices[0].message.content or "{}"
+        try:
+            extraction = FieldExtraction.model_validate_json(raw)
+        except Exception:
+            pass
+
+    # Build final result
+    new_extracted = dict(extracted_fields)
+    if extraction:
+        for field in extraction.extracted_fields:
+            new_extracted[field.field_name] = field.field_value
+
+    current_keys = set(new_extracted.keys())
+    missing = [f for f in required_fields if f not in current_keys]
+    is_complete = len(missing) == 0 and len(required_fields) > 0
+
+    yield {
+        "type": "done",
+        "response": clean_text if clean_text.strip() else "Done.",
         "extracted_fields": new_extracted,
         "is_complete": is_complete,
         "missing_fields": missing,

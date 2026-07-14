@@ -48,7 +48,7 @@ class RenderResponse(BaseModel):
 class ExtractedField(BaseModel):
     field_name: str
     field_value: str
-    confidence: str  # "high" | "medium" | "low"
+    confidence: str | float
 
 
 class FieldExtraction(BaseModel):
