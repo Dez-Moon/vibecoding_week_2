@@ -34,6 +34,7 @@ export function useChat({ templateName, onFieldsExtracted }: UseChatOptions) {
     setIsLoading(true)
 
     const userMessage: ChatMessage = { role: "user", content }
+    setMessages(prev => [...prev, userMessage])
 
     try {
       const { response, extracted_fields, is_complete, missing_fields }: ChatResponse =
@@ -44,7 +45,7 @@ export function useChat({ templateName, onFieldsExtracted }: UseChatOptions) {
         })
 
       const assistantMessage: ChatMessage = { role: "assistant", content: response }
-      setMessages(prev => [...prev, userMessage, assistantMessage])
+      setMessages(prev => [...prev, assistantMessage])
       setExtractedFields(extracted_fields)
       setIsComplete(is_complete)
       setMissingFields(missing_fields)
@@ -54,7 +55,7 @@ export function useChat({ templateName, onFieldsExtracted }: UseChatOptions) {
         role: "assistant",
         content: "Sorry, I ran into an error. Please try again.",
       }
-      setMessages(prev => [...prev, userMessage, errorMsg])
+      setMessages(prev => [...prev, errorMsg])
     } finally {
       setIsLoading(false)
     }

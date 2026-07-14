@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useRef } from "react"
-import { Send, Loader2, CheckCircle2 } from "lucide-react"
+import { Send, CheckCircle2 } from "lucide-react"
 import { useChat } from "@/hooks/use-chat"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
@@ -86,8 +86,12 @@ export function ChatPanel({ templateName, onFieldsExtracted, onComplete }: ChatP
           ))}
           {isLoading && (
             <div className="flex justify-start">
-              <div className="bg-muted rounded-2xl rounded-bl-md px-4 py-2.5">
-                <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+              <div className="bg-muted rounded-2xl rounded-bl-md px-4 py-3">
+                <span className="flex gap-1">
+                  <span className="h-2 w-2 rounded-full bg-muted-foreground animate-bounce [animation-delay:-0.3s]" />
+                  <span className="h-2 w-2 rounded-full bg-muted-foreground animate-bounce [animation-delay:-0.15s]" />
+                  <span className="h-2 w-2 rounded-full bg-muted-foreground animate-bounce" />
+                </span>
               </div>
             </div>
           )}
