@@ -47,11 +47,11 @@ export function renderTemplate(
 
 export function getGreeting(templateName: string): Promise<GreetingResponse> {
   const params = new URLSearchParams({ template_name: templateName })
-  return apiFetch<GreetingResponse>(`/chat/greeting?${params}`)
+  return apiFetch<GreetingResponse>(`/api/chat/greeting?${params}`)
 }
 
 export function sendChatMessage(payload: ChatRequest): Promise<ChatResponse> {
-  return apiFetch<ChatResponse>("/chat/message", {
+  return apiFetch<ChatResponse>("/api/chat/message", {
     method: "POST",
     body: JSON.stringify(payload),
   })
