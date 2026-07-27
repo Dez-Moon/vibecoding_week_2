@@ -21,7 +21,7 @@ def engine():
         cursor.execute("PRAGMA foreign_keys=ON")
         cursor.close()
 
-    from backend.app.models import Base
+    from app.models import Base
 
     Base.metadata.create_all(bind=test_engine)
     return test_engine
@@ -34,8 +34,8 @@ def client(engine):
 
     TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-    from backend.app.main import app
-    from backend.app.database import get_db
+    from app.main import app
+    from app.database import get_db
 
     def override_get_db():
         db = TestingSessionLocal()

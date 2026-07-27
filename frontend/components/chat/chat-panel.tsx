@@ -66,24 +66,30 @@ export function ChatPanel({ templateName, onFieldsExtracted, onComplete }: ChatP
     <div className="flex flex-col h-full">
       <ScrollArea className="flex-1 px-4">
         <div className="max-w-2xl mx-auto space-y-4 py-4">
-          {messages.map((message, index) => (
-            <div
-              key={index}
-              className={`flex ${
-                message.role === "user" ? "justify-end" : "justify-start"
-              }`}
-            >
+          {messages.map((message, index) => {
+            if (message.role === "assistant" && !message.content.trim()) {
+              return null
+            }
+
+            return (
               <div
-                className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm ${
-                  message.role === "user"
-                    ? "bg-primary text-primary-foreground rounded-br-md"
-                    : "bg-muted rounded-bl-md"
+                key={index}
+                className={`flex ${
+                  message.role === "user" ? "justify-end" : "justify-start"
                 }`}
               >
-                {message.content}
+                <div
+                  className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm ${
+                    message.role === "user"
+                      ? "bg-primary text-primary-foreground rounded-br-md"
+                      : "bg-muted rounded-bl-md"
+                  }`}
+                >
+                  {message.content}
+                </div>
               </div>
-            </div>
-          ))}
+            )
+          })}
           {isLoading && (
             <div className="flex justify-start">
               <div className="bg-muted rounded-2xl rounded-bl-md px-4 py-3">

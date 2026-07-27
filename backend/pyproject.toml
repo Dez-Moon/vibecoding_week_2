@@ -28,7 +28,7 @@ where = ["."]
 include = ["app*"]
 
 [tool.pytest.ini_options]
-testpaths = ["backend/tests"]
+testpaths = ["tests"]
 
 [dependency-groups]
 dev = [

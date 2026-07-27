@@ -2,7 +2,7 @@ import sqlalchemy
 import sqlalchemy.pool
 import pytest
 from fastapi.testclient import TestClient
-from backend.app import models
+from app import models
 
 
 @pytest.fixture
@@ -34,9 +34,9 @@ def client():
         finally:
             db.close()
 
-    from backend.app.database import get_db
-    import backend.app.database as db_mod
-    import backend.app.main as main_mod
+    from app.database import get_db
+    import app.database as db_mod
+    import app.main as main_mod
 
     original_engine = db_mod.engine
     original_session_local = db_mod.SessionLocal
@@ -45,7 +45,7 @@ def client():
     main_mod.engine = test_engine
     main_mod.SessionLocal = TestingSessionLocal
 
-    from backend.app.main import app
+    from app.main import app
     app.dependency_overrides[get_db] = override_get_db
 
     with TestClient(app, raise_server_exceptions=True) as c:
