@@ -1,3 +1,5 @@
+import os
+
 from fastapi import APIRouter, Depends, HTTPException, Response, status
 from sqlalchemy.orm import Session
 
@@ -9,6 +11,7 @@ router = APIRouter(prefix="/api/auth", tags=["auth"])
 
 COOKIE_NAME = "access_token"
 COOKIE_MAX_AGE = 60 * 60 * 24 * 7  # 7 days in seconds
+COOKIE_SECURE = os.getenv("COOKIE_SECURE", "false").lower() == "true"
 
 
 @router.post("/signup", response_model=schemas.UserRead, status_code=201)
@@ -39,14 +42,14 @@ def signin(body: schemas.SignInRequest, response: Response, db: Session = Depend
         max_age=COOKIE_MAX_AGE,
         httponly=True,
         samesite="lax",
-        secure=False,  # True in production with HTTPS
+        secure=COOKIE_SECURE,
     )
     return {"id": user.id, "email": user.email, "name": user.name}
 
 
 @router.post("/signout")
 def signout(response: Response):
-    response.delete_cookie(COOKIE_NAME, httponly=True, samesite="lax", secure=False)
+    response.delete_cookie(COOKIE_NAME, httponly=True, samesite="lax", secure=COOKIE_SECURE)
     return {"ok": True}
 
 

@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest"
+import { describe, it, expect, vi, beforeEach, afterAll } from "vitest"
 
 const mockFetch = vi.fn()
 global.fetch = mockFetch
@@ -9,9 +9,20 @@ import {
   renderTemplate,
 } from "@/lib/api"
 
+const originalApiUrl = process.env.NEXT_PUBLIC_API_URL
+
 describe("api", () => {
   beforeEach(() => {
     mockFetch.mockReset()
+    delete process.env.NEXT_PUBLIC_API_URL
+  })
+
+  afterAll(() => {
+    if (originalApiUrl === undefined) {
+      delete process.env.NEXT_PUBLIC_API_URL
+      return
+    }
+    process.env.NEXT_PUBLIC_API_URL = originalApiUrl
   })
 
   describe("getTemplate", () => {
@@ -115,6 +126,22 @@ describe("api", () => {
         expect.any(String),
         expect.objectContaining({
           body: JSON.stringify({ variables: {} }),
+        })
+      )
+    })
+
+    it("uses relative API paths when NEXT_PUBLIC_API_URL is unset", async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve([]),
+      } as unknown as Response)
+
+      await listTemplates()
+
+      expect(mockFetch).toHaveBeenCalledWith(
+        "/templates/",
+        expect.objectContaining({
+          headers: { "Content-Type": "application/json" },
         })
       )
     })
