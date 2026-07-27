@@ -329,7 +329,6 @@ def process_message_stream(
         content = chunk.choices[0].delta.content or ""
         streamed_text += content
 
-        # Forward text up to the __JSON__ marker boundary (not including the marker itself)
         marker_pos = streamed_text.rfind("\n__JSON__\n")
         if marker_pos != -1 and last_forwarded < marker_pos:
             yield {"type": "text", "content": streamed_text[last_forwarded:marker_pos]}

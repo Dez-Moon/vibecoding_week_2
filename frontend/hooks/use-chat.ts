@@ -45,11 +45,15 @@ export function useChat({ templateName, onFieldsExtracted }: UseChatOptions) {
 
     const userMessage: ChatMessage = { role: "user", content }
     const assistantMessage: ChatMessage = { role: "assistant", content: "" }
-    setMessagesSync(prev => [...prev, userMessage, assistantMessage])
+    const newMessages = [...messagesRef.current, userMessage, assistantMessage]
+    messagesRef.current = newMessages
+    setMessagesSync(newMessages)
 
     const controller = sendChatMessageStream(
       {
-        messages: messagesRef.current,
+        messages: messagesRef.current.filter(
+          (m) => !(m.role === "assistant" && m.content === ""),
+        ),
         template_name: templateName,
         extracted_fields: extractedFields,
       },
