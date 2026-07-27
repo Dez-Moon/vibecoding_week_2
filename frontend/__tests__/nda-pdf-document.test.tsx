@@ -1,6 +1,23 @@
 import { describe, it, expect } from "vitest"
 import { NDAPDFDocument, fontSources } from "@/components/nda/nda-pdf-document"
 import { Document, Page, Text } from "@react-pdf/renderer"
+import { isValidElement, type ReactNode } from "react"
+
+function flattenText(node: ReactNode): string {
+  if (typeof node === "string" || typeof node === "number") {
+    return String(node)
+  }
+
+  if (Array.isArray(node)) {
+    return node.map(flattenText).join("")
+  }
+
+  if (isValidElement(node)) {
+    return flattenText(node.props.children)
+  }
+
+  return ""
+}
 
 describe("NDAPDFDocument", () => {
   describe("fontSources", () => {
@@ -53,6 +70,34 @@ describe("NDAPDFDocument", () => {
       const content = "First\n\n\n\nSecond"
       const paragraphs = content.split(/\n{2,}/).filter(Boolean)
       expect(paragraphs).toHaveLength(2)
+    })
+  })
+
+  describe("document formatting", () => {
+    it("strips markdown markers and inline html placeholders from paragraph text", () => {
+      const content = "# Standard Terms\n\n1. **Introduction**. This applies to <span class=\"coverpage_link\">Purpose</span>."
+      const document = NDAPDFDocument({ renderedContent: content })
+      const page = document.props.children
+      const paragraphs = Array.isArray(page.props.children)
+        ? page.props.children
+        : [page.props.children]
+
+      expect(flattenText(paragraphs[0].props.children)).toBe("Standard Terms")
+      expect(flattenText(paragraphs[1].props.children)).toBe("1. Introduction. This applies to Purpose.")
+    })
+
+    it("disables automatic hyphenation for body paragraphs", () => {
+      const content = "This Mutual Non-Disclosure Agreement contains confidential information."
+      const document = NDAPDFDocument({ renderedContent: content })
+      const page = document.props.children
+      const paragraph = Array.isArray(page.props.children)
+        ? page.props.children[0]
+        : page.props.children
+
+      expect(paragraph.props.hyphenationCallback).toBeDefined()
+      expect(paragraph.props.hyphenationCallback("Confidential", () => ["Confi-", "dential"])).toEqual([
+        "Confidential",
+      ])
     })
   })
 })
