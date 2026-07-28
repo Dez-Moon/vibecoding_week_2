@@ -5,7 +5,7 @@ import { ArrowLeft, Scale } from "lucide-react"
 import { useTemplate } from "@/hooks/use-template"
 import { useNDARenderedPreview } from "@/hooks/use-render"
 import { ChatPanel } from "@/components/chat/chat-panel"
-import { NDAPreview } from "./nda-preview"
+import { DocumentPreview } from "@/components/document-preview"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 
@@ -78,7 +78,7 @@ export function NDACreator({ templateId, onBack }: NDACreatorProps) {
 
         {/* Preview panel */}
         <div className="w-1/2 bg-[#F0EFEC] flex flex-col min-h-0">
-          <NDAPreview
+          <DocumentPreview
             template={template!}
             renderedContent={previewQuery.data?.rendered_content ?? null}
             formValues={formValues}
